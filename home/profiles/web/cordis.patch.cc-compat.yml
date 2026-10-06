@@ -21,11 +21,14 @@
 # The repository list is the same as `cc-compat/repos.txt`. If you trim that
 # list, trim these rows to match.
 #
-# `disabled: false` is NOT repeated here: the base layer already mounts the
-# provider, and two id-targeted patches for the same row would make the
-# composition harder to read for no gain.
+# `disabled: false` IS repeated here, deliberately. When two blocks declare the
+# same row id, the composer keeps the LAST declaration — so this row is the one
+# that survives, and a `disabled: false` that only lived in the base layer would
+# be dropped with the base copy. Measured: without this line the composed tree
+# still reported `disabled: true`, and the skill catalog stayed empty.
 # ---------------------------------------------------------------------------
 - id: skill-filesystem
+  disabled: false
   config:
     customSkillDirs:
       - !!js dshHomePath('skills', 'cc-Imbad0202__academic-research-skills')

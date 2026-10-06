@@ -136,8 +136,10 @@ cc-compat/                installer + compiler -> $DSH_HOME/cc-compat
 tools/
   compose-patch.mjs       assembles the profile patch from feature blocks
   verify.mjs              the post-install check
+  boot-cpu-probe.mjs      measures start time and idle CPU of a live harness
 docs/
   PROVIDERS.md            credentials, endpoints, env vars, per-feature prerequisites
+  PERFORMANCE.md          measured start time, the idle-CPU leak, Firecrawl modes
   SANITIZATION.md         exactly what was removed from the private original, and why
 manifest.json             features, env vars, credential refs, per-layer plugin requirements
 ```
@@ -231,6 +233,13 @@ clean-room boot died exactly this way.
 
 ## Notes that save an hour
 
+- **The installed harness will not start without the `hmr` row.** `dsh web`
+  watches the profile patch layer, and that watcher requires the Cordis HMR
+  service, which the `web-app` bundle ships `disabled: true`. Without the row
+  the harness prints its URL and then exits code 1 with
+  `user patch-layer watching requires the Cordis HMR service` — which reads as
+  "starts and immediately dies". A source checkout tolerates it; the installed
+  package does not. The base layer enables it; see `docs/PERFORMANCE.md`.
 - **A plugin row added while a harness is running does nothing.** The patch
   watcher applies changes to already-mounted rows, but the plugin *set* is
   fixed at boot. A live-added row is ignored silently — nothing breaks, and it
@@ -241,11 +250,16 @@ clean-room boot died exactly this way.
   a row a bundle already shipped; adding a *new* plugin needs
   `- insert: [{ id: x, name: 'package' }]`. A bare `- id:` for a row that does
   not exist is dropped with `patch: entry "x" not found`.
+- **`disabled: false` must live in the declaration that survives.** When two
+  layers name the same row id, the composer keeps the **last** one — the earlier
+  fields are dropped with the earlier copy. A `config:`-only patch on a disabled
+  row is a silent no-op, which is how the skill catalog stayed empty (0 of 29)
+  while the patch file looked correct.
 - **The `web-app` bundle ships `skill-filesystem` with `disabled: true`.** An
   id-targeted `config` patch alone — even one full of `customSkillDirs` —
   discovers nothing, because the plugin never mounts and nothing is logged.
   The core layer sets `disabled: false`, which is what actually turns the skill
-  catalog on. This was the difference between 0 and 29 skills.
+  catalog on.
 - **Skill roots are discovered automatically.** `$DSH_HOME/skills` and
   `$DSH_AGENTS_HOME/skills` (default `~/.agents/skills`) need no configuration.
   `customSkillDirs` is only for roots outside those, and it is additive — it
