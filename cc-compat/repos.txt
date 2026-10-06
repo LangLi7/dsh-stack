@@ -1,0 +1,10 @@
+# Repositories installed by cc-compat/plugin-install.mjs.
+# One reference per line; blank lines and `#` comments are ignored.
+# Accepted forms: owner/repo, https://github.com/owner/repo, …/repo.git
+https://github.com/Imbad0202/academic-research-skills
+https://github.com/SnailSploit/claude-red
+https://github.com/mukul975/anthropic-cybersecurity-skills
+https://github.com/k-dense-ai/scientific-agent-skills
+https://github.com/rohitg00/agentmemory
+https://github.com/cathrynlavery/diagram-design
+https://github.com/affaan-m/ECC

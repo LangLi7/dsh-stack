@@ -1,0 +1,58 @@
+# dsh profile patch layer — ADD-ON: self-hosted web search via Firecrawl.
+#
+# Requires the out-of-tree plugin `@deepseek-ai/dsh-web-search-firecrawl`
+# inside the profile:
+#
+#   $DSH_HOME/profiles/<profile>/node_modules/@deepseek-ai/dsh-web-search-firecrawl
+#
+# and a reachable Firecrawl endpoint. This layer is split off the core because
+# a plugin name the loader cannot resolve does not warn — it aborts the entire
+# boot with `plugin tree failed to load`. `install.ps1 -Features websearch`
+# refuses to write this layer when the package is missing.
+#
+# The base profile works without this layer: the `web` row keeps the bundled
+# DeepSeek search backend, and `web_search` stays available.
+
+# ---------------------------------------------------------------------------
+# The provider, plus the MCP bridge that exposes firecrawl_search /
+# firecrawl_scrape / firecrawl_crawl / firecrawl_map as mcp__firecrawl__*.
+# The cloud fallback key is read from the credential ref
+# FIRECRAWL_FALLBACK_API_KEY and never appears in this file.
+# ---------------------------------------------------------------------------
+- insert:
+    - id: web-search-firecrawl
+      name: '@deepseek-ai/dsh-web-search-firecrawl'
+      config:
+        baseURL: !!js (process.env["FIRECRAWL_BASE_URL"] ?? "http://127.0.0.1:3002")
+        limit: 20
+        # Per-attempt budget, so a hanging local endpoint leaves room for the
+        # fallback inside the tool's own 60s search budget.
+        timeoutMs: 15000
+        fallbackBaseURL: 'https://api.firecrawl.dev'
+        fallbackApiKeyEnv: 'FIRECRAWL_FALLBACK_API_KEY'
+        # A local SearXNG sometimes answers with zero sources; treat that as a
+        # reason to ask the cloud endpoint.
+        fallbackOnEmpty: true
+    - id: mcp-firecrawl
+      name: '@deepseek-ai/dsh-mcp-client'
+      config:
+        serverName: firecrawl
+        transport: stdio
+        command: npx
+        args: ['-y', 'firecrawl-mcp']
+        toolCallTimeoutMs: 180000
+        env:
+          FIRECRAWL_API_URL: !!js (process.env["FIRECRAWL_BASE_URL"] ?? "http://127.0.0.1:3002")
+          FIRECRAWL_API_KEY: ''
+
+# Make the Firecrawl provider the active backend for the model-facing
+# web_search tool instead of the bundled DeepSeek endpoint.
+- id: web
+  config:
+    searchProvider: firecrawl-official
+- id: tool-web
+  config:
+    fetch: false
+    searchTimeoutMs: 60000
+    searchMaxResults: 50
+    searchMaxQueries: 4

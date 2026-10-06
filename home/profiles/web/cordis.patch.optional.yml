@@ -1,0 +1,76 @@
+# dsh profile patch layer — ADD-ON: MCP servers.
+#
+# Extracted from the portable base so an install without these servers still
+# boots clean. Each row below needs something that is NOT installed by
+# `install.ps1`: either a network endpoint or a global npm package. Add
+# `optional` to `-Features` only after the prerequisite exists.
+#
+# An MCP row whose command is missing does not crash the boot; the tools
+# simply never appear. A wrong `command` path that DOES exist but fails to
+# speak JSON-RPC on stdout is the failure mode to watch for.
+
+# ---------------------------------------------------------------------------
+# agentmemory: durable cross-session memory. Needs the agentmemory server
+# reachable (default http://localhost:3111) — `npx -y @agentmemory/mcp` is
+# the client, not the server. AGENTMEMORY_SECRET is read from the ambient
+# environment and never written down.
+# ---------------------------------------------------------------------------
+- insert:
+    - id: mcp-agentmemory
+      name: '@deepseek-ai/dsh-mcp-client'
+      config:
+        transport: stdio
+        serverName: agentmemory
+        command: npx
+        args: ['-y', '@agentmemory/mcp']
+        env:
+          AGENTMEMORY_URL: !!js (process.env["AGENTMEMORY_URL"] ?? "http://localhost:3111")
+          AGENTMEMORY_SECRET: !!js (process.env["AGENTMEMORY_SECRET"] ?? '')
+          AGENTMEMORY_TOOLS: !!js (process.env["AGENTMEMORY_TOOLS"] ?? "all")
+
+# ---------------------------------------------------------------------------
+# chrome-devtools: browser automation and page inspection. Needs network
+# access for the first `npx` fetch.
+# ---------------------------------------------------------------------------
+- insert:
+    - id: mcp-chrome-devtools
+      name: '@deepseek-ai/dsh-mcp-client'
+      config:
+        transport: stdio
+        serverName: chrome-devtools
+        command: npx
+        args: ['-y', chrome-devtools-mcp@latest]
+        env: {}
+
+# ---------------------------------------------------------------------------
+# code-graph: codebase-memory-mcp exposes 17 tools (index_repository,
+# search_graph, trace_path, get_architecture, detect_changes, query_graph,
+# get_code_snippet, get_file_outline, ...).
+#
+# Deliberately NOT the npm launcher: that launcher writes a banner to stdout
+# at start, which destroys the MCP server's JSON-RPC. Hence the binary
+# directly. Install it first:
+#   npm i -g codebase-memory-mcp
+# Override the location with CODEMEMORY_MCP_BIN if it is not under APPDATA.
+#
+# `disabled` gates on the binary actually existing, so this row is inert
+# until the package is installed instead of failing the mount.
+#
+# NOTE on the expression dialect: `!!js` is evaluated with `new Function`
+# under `with (ctx)`, so the scope is the loader context plus true globals —
+# `process` and `ctx.dshHomePath` work, `require` does NOT. Builtins are
+# reached through `process.getBuiltinModule` (Node >= 22.3), which is why the
+# existence check below is spelled that way.
+#
+# The negated form is written as an explicit ternary: a leading `!` right
+# after the `!!js` tag confuses the YAML tag scanner (it reads `!!!`).
+# ---------------------------------------------------------------------------
+- insert:
+    - id: mcp-cbm
+      name: '@deepseek-ai/dsh-mcp-client'
+      disabled: !!js (process.getBuiltinModule('node:fs').existsSync(process.env["CODEMEMORY_MCP_BIN"] ?? ((process.env["APPDATA"] ?? "") + "\\npm\\node_modules\\codebase-memory-mcp\\bin\\codebase-memory-mcp.exe")) ? false : true)
+      config:
+        serverName: cbm
+        transport: stdio
+        command: !!js (process.env["CODEMEMORY_MCP_BIN"] ?? ((process.env["APPDATA"] ?? "") + "\\npm\\node_modules\\codebase-memory-mcp\\bin\\codebase-memory-mcp.exe"))
+        toolCallTimeoutMs: 300000

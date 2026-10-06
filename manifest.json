@@ -1,0 +1,73 @@
+{
+  "$comment": "Feature manifest for the DSH portable stack. Consumed by install.ps1 / install.sh (-Features / --features) and by tools/verify.mjs. 'base' is implicit and always applied.",
+  "name": "dsh-stack",
+  "version": "1.0.0",
+  "profile": "web",
+  "features": {
+    "base": {
+      "title": "Portable core: local plugins, skill catalog, profile patch",
+      "requires": [],
+      "patches": ["cordis.patch.yml"],
+      "plugins": ["dsh-ponytail", "dsh-usage-budget", "dsh-i18n-de"],
+      "skills": "portable",
+      "notes": "Every plugin this layer mounts ships with the harness installation. No network access required."
+    },
+    "websearch": {
+      "title": "Self-hosted web search: Firecrawl provider and MCP bridge",
+      "requires": ["base", "plugin:@deepseek-ai/dsh-web-search-firecrawl"],
+      "patches": ["cordis.patch.websearch.yml"],
+      "partnerPlugins": ["@deepseek-ai/dsh-web-search-firecrawl"],
+      "notes": "The Firecrawl provider is an OUT-OF-TREE plugin: it must already exist in the profile's node_modules. Without it this layer aborts the whole boot, so the installer refuses to write it when the package is missing. Also needs a reachable Firecrawl endpoint (FIRECRAWL_BASE_URL, default http://127.0.0.1:3002)."
+    },
+    "cc-compat": {
+      "title": "Claude-Code plugin compatibility: mirrored CC skills, hooks, agents, commands",
+      "requires": ["base", "git", "network"],
+      "patches": ["cordis.patch.cc-compat.yml"],
+      "tools": ["cc-compat/install.mjs", "cc-compat/plugin-install.mjs"],
+      "notes": "Clones the repositories in cc-compat/repos.txt into $DSH_HOME/cc-sources and regenerates cc-compat/generated-*; the generated hook rows are appended to the profile patch by the installer."
+    },
+    "credentials": {
+      "title": "Windows owner-only ACL for the credentials document (dsh-credentials-local overlay)",
+      "requires": ["base", "plugin:@deepseek-ai/dsh-credentials-local"],
+      "patches": [],
+      "partnerPlugins": ["@deepseek-ai/dsh-credentials-local"],
+      "overlay": {
+        "target": "the installation's node_modules/@deepseek-ai/dsh-credentials-local",
+        "replaces": ["lib/index.js", "lib/types/owner-only-acl.js", "lib/types/owner-only-acl.d.ts"],
+        "backup": "lib/index.js.bak-dsh-stack",
+        "source": "patches/credentials-local",
+        "test": "patches/credentials-local/tests/owner-only-acl.test.mjs"
+      },
+      "notes": "The stock provider SKIPS its owner-only check on Windows ('if (process.platform === \"win32\") return') and writeFileAtomic publishes a fresh inode that inherits the parent directory's entries — so on a home directory that grants another principal access, the credentials document inherits it and the secret is readable beyond its owner. This overlay re-founds the DACL on the owner, SYSTEM and Administrators. It patches a package owned by the harness installation, so the installer probes first and refuses to clobber an installation that already enforces the ACL, and the regression test runs against the artifact that is actually loaded."
+    },
+    "optional": {
+      "title": "MCP servers: agentmemory, chrome-devtools, code-graph",
+      "requires": ["base", "network"],
+      "patches": ["cordis.patch.optional.yml"],
+      "partnerPlugins": ["@deepseek-ai/dsh-mcp-client"],
+      "notes": "Each row needs its own prerequisite: an agentmemory server on :3111, a first npx fetch, or a global codebase-memory-mcp install. The code-graph row disables itself when its binary is absent."
+    }
+  },
+  "env": {
+    "DSH_HOME": "Harness home; defaults to ~/.dsh. Everything is installed relative to this.",
+    "FIRECRAWL_BASE_URL": "Firecrawl endpoint for the websearch feature (provider and MCP bridge). Default http://127.0.0.1:3002.",
+    "DSH_TRUSTED_HOSTS": "Comma-separated extra hostnames trusted by the /api browser-trust fence. Empty by default.",
+    "DSH_AGENTS_HOME": "Shared agent config root holding an extra skills directory. Default ~/.agents.",
+    "AGENTMEMORY_URL": "agentmemory server URL, used by the optional MCP row. Default http://localhost:3111.",
+    "CODEMEMORY_MCP_BIN": "Override the code-graph binary path for the optional MCP row."
+  },
+  "credentials": {
+    "$comment": "Never committed. Create these as credential refs in $DSH_HOME/.credentials.yaml or as environment variables.",
+    "DEEPSEEK_API_KEY": "DeepSeek provider key.",
+    "OPENROUTER_API_KEY": "OpenRouter provider key (referenced by the llm-pi-ai provider config).",
+    "FIRECRAWL_FALLBACK_API_KEY": "Firecrawl Cloud fallback key; only for the websearch feature.",
+    "AGENTMEMORY_SECRET": "agentmemory shared secret, only if the server requires one."
+  },
+  "patchRequirements": {
+    "$comment": "Plugin packages each patch layer needs to be resolvable from the profile. Checked BEFORE anything is written: an unresolvable name aborts the whole boot.",
+    "cordis.patch.yml": [],
+    "cordis.patch.websearch.yml": ["@deepseek-ai/dsh-web-search-firecrawl"],
+    "cordis.patch.cc-compat.yml": [],
+    "cordis.patch.optional.yml": ["@deepseek-ai/dsh-mcp-client"]
+  }
+}

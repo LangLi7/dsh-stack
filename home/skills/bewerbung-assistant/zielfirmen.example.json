@@ -1,0 +1,21 @@
+{
+  "_kommentar": "Zielfirmen-Liste für Blindbewerbung / Spontanbewerbung. Felder pro Firma ausfüllen, Quelle dokumentieren. Nur öffentlich zugängliche Kontaktdaten, zweckgebunden für Bewerbung.",
+  "zielfirmen": [
+    {
+      "firma": "Swissgrid AG",
+      "adresse": "Bleichemattstrasse 31",
+      "plz_ort": "5001 Aarau",
+      "kanton": "Aargau",
+      "branche": "Energieübertragung",
+      "kontaktperson": "Frau Frey",
+      "position": "HR",
+      "email": "",
+      "telefon": "",
+      "website": "https://www.swissgrid.ch",
+      "quelle": "kmu-aargau.ch",
+      "status": "aerfa",
+      "datum": "2026-06-30",
+      "notizen": "IT-Praktikum (12 Monate) ausgeschrieben – normal bewerben"
+    }
+  ]
+}

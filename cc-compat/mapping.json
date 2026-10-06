@@ -1,0 +1,147 @@
+{
+  "version": 1,
+  "description": "Naming transfer table: maps Claude-Code artifact kinds onto DeepSeek Harness targets. A rule never rewrites the source artifact; it declares how a target is emitted from it, so one table explains every install and one compiler executes it.",
+  "roots": {
+    "source": "<DSH_HOME>/cc-sources/<owner>__<repo>",
+    "target": "<DSH_HOME>/skills/cc-<owner>__<repo>",
+    "report": "<DSH_HOME>/cc-sources/compile-report.json",
+    "patchFragment": "<DSH_HOME>/cc-compat/generated-mcp.patch.yml"
+  },
+  "rules": [
+    {
+      "id": "skill",
+      "status": "native",
+      "from": {
+        "glob": "**/SKILL.md",
+        "frontmatter": { "name": "required", "description": "required" }
+      },
+      "to": {
+        "kind": "skill",
+        "dir": "<target>/<name>",
+        "file": "SKILL.md"
+      },
+      "note": "The one kind both ecosystems already agree on; the directory is copied verbatim so bundled references keep working."
+    },
+    {
+      "id": "command",
+      "status": "compiled",
+      "from": {
+        "glob": "commands/*.md",
+        "frontmatter": { "description": "required", "argument-hint": "optional", "allowed-tools": "optional" }
+      },
+      "to": {
+        "kind": "skill",
+        "dir": "<target>/cmd-<stem>",
+        "file": "SKILL.md",
+        "frontmatter": {
+          "name": "cmd-<stem>",
+          "description": "<description>",
+          "user-invocable": true,
+          "disable-model-invocation": true
+        }
+      },
+      "fieldMap": {
+        "description": "description",
+        "argument-hint": "argument-hint",
+        "allowed-tools": "x-dsh-cc-allowed-tools"
+      },
+      "bodyPreamble": "Arguments passed by the user: `$ARGUMENTS`",
+      "note": "A CC command is a named prompt the user invokes explicitly, which is exactly a user-invocable skill. disable-model-invocation keeps it out of autonomous model choice, matching CC's explicit-only use."
+    },
+    {
+      "id": "agent",
+      "status": "compiled",
+      "from": {
+        "glob": "**/agents/*.md",
+        "frontmatter": { "name": "required", "description": "required" }
+      },
+      "to": {
+        "kind": "skill",
+        "dir": "<target>/agent-<owner>-<name>",
+        "file": "SKILL.md",
+        "frontmatter": {
+          "name": "agent-<owner>-<name>",
+          "description": "<description>",
+          "user-invocable": true
+        }
+      },
+      "fieldMap": { "name": "x-dsh-cc-agent-name", "description": "description" },
+      "note": "A CC subagent file is a role prompt. dsh subagent presets are composed from cordis.yml preset files, so this stage emits the prompt as an invocable skill and records the agent name for a later preset stage. <owner> is the nearest ancestor directory holding a SKILL.md, because the same agent name is reused across plugins for different personas; without it one would overwrite the other."
+    },
+    {
+      "id": "mcp",
+      "status": "compiled",
+      "from": {
+        "glob": "**/{mcp.json,.mcp.json}",
+        "key": "mcpServers"
+      },
+      "to": {
+        "kind": "plugin-row",
+        "plugin": "@deepseek-ai/dsh-mcp-client",
+        "fragment": "<patchFragment>"
+      },
+      "fieldMap": {
+        "serverName": "<server-key>",
+        "transport": "stdio",
+        "command": "command",
+        "args": "args",
+        "env": "env"
+      },
+      "note": "Rows are written to a separate fragment, never into the profile patch, so an install cannot silently rewrite a user's own composition."
+    }
+  ],
+  "variables": {
+    "${CLAUDE_PLUGIN_ROOT}": "<DSH_HOME>/cc-sources/<owner>__<repo>",
+    "${CLAUDE_PROJECT_DIR}": "<workspace>",
+    "$ARGUMENTS": "<user message that invoked the skill>",
+    "$1": "<first argument of that message>",
+    "$2": "<second argument of that message>"
+  },
+  "toolNames": {
+    "Read": "read",
+    "Write": "write",
+    "Edit": "edit",
+    "MultiEdit": "edit",
+    "NotebookEdit": "edit",
+    "NotebookRead": "read",
+    "Bash": "pwsh",
+    "PowerShell": "pwsh",
+    "Shell": "pwsh",
+    "BashOutput": "job_output",
+    "KillShell": "job_kill",
+    "Glob": "glob",
+    "Grep": "grep",
+    "LS": "glob",
+    "WebSearch": "web_search",
+    "WebFetch": "firecrawl_scrape",
+    "Task": "subagent",
+    "TodoWrite": "todo_write",
+    "ExitPlanMode": "exit_plan_mode",
+    "SlashCommand": "skill",
+    "Skill": "skill"
+  },
+  "policies": {
+    "importedSkillInvocation": {
+      "field": "disable-model-invocation",
+      "value": true,
+      "reason": "The imported corpus is over a thousand skills, and the skill catalog is assembled into every single request. Leaving them model-invocable would put every imported description into every request; user-invocable keeps them reachable as /skill <name> without that cost. A source that already declares the field keeps its own value."
+    }
+  },
+  "unsupported": [
+    {
+      "id": "hooks",
+      "from": "hooks.json / settings.json hooks key",
+      "reason": "dsh runs CC command-hooks through @deepseek-ai/dsh-hooks-claude-code, which needs an explicit configPath per process rather than per-plugin discovery; wiring it is a deliberate choice, not a mechanical translation."
+    },
+    {
+      "id": "plugin-manifest",
+      "from": "plugin.json / marketplace.json",
+      "reason": "Names what a CC plugin bundles. dsh has no marketplace layer; the bundled artifacts are already covered by the rules above."
+    },
+    {
+      "id": "agent-preset",
+      "from": "agents/*.md as a dsh subagent preset",
+      "reason": "A dsh preset is a cordis.yml composition, not a prompt file. The prompt is preserved as agent-<name>; the composition mapping is a later stage."
+    }
+  ]
+}

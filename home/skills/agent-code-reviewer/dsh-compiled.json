@@ -1,0 +1,8 @@
+{
+  "kind": "agent",
+  "source": "affaan-m__ECC/.kiro/agents/code-reviewer.md",
+  "rule": "agent",
+  "agentName": "code-reviewer",
+  "ccName": "code-reviewer",
+  "dshName": "agent-code-reviewer"
+}

@@ -1,0 +1,90 @@
+# dsh profile patch layer — the portable core of this stack.
+#
+# A top-level YAML array of loader patch entries: id-targeted config
+# overrides and `insert` lists that ADD plugin rows. This file is applied
+# after every bundle layer of `dsh.profile.bundles`, so it may override any
+# row a bundle shipped.
+#
+# PORTABILITY: every path below is derived at loader time from the harness
+# home — `dshHomePath(...)`, the resolver the loader itself provides to
+# `!!js` expressions, which follows `$DSH_HOME` and falls back to `~/.dsh`.
+# Nothing here names a user, a drive letter, or a machine.
+#
+# Every plugin this layer mounts ships WITH the harness installation. That is
+# deliberate: a missing plugin name is not a warning, it aborts the whole boot
+# with `plugin tree failed to load`. Anything that needs an out-of-tree package
+# lives in its own layer (`cordis.patch.websearch.yml`,
+# `cordis.patch.cc-compat.yml`, `cordis.patch.optional.yml`).
+
+# ---------------------------------------------------------------------------
+# 1. German localization: translates English markers in tool results and
+#    errors, with a Settings toggle. Local plugin, no configuration.
+# ---------------------------------------------------------------------------
+- insert:
+    - id: dsh-i18n-de
+      name: 'dsh-i18n-de'
+
+# ---------------------------------------------------------------------------
+# 2. Cost and budget display: records token usage and cost per API key and
+#    model, pulls prices from models.dev and balances from DeepSeek /
+#    OpenRouter, and shows both as a hover panel plus a "Kosten & Budget"
+#    settings page. Budgets are controlled through the `dsh-usage-budget`
+#    settings namespace. Local plugin.
+# ---------------------------------------------------------------------------
+- insert:
+    - id: dsh-usage-budget
+      name: 'dsh-usage-budget'
+
+# ---------------------------------------------------------------------------
+# 3. Ponytail switch: a chip in the composer tool row, directly beside the
+#    access selector ("Workspace Write" / "Full access"). The host half
+#    rewrites the invocation keys `disable-model-invocation` /
+#    `user-invocable` in the Ponytail skills' frontmatter, which decides
+#    whether the harness knows about them at all; the client half is the
+#    button. Also available as `/ponytail on|off|toggle|status`.
+#
+#    Verified behaviour: on a fresh `dsh web` the plugin mounts, appears in
+#    the boot manifest under id "dsh-ponytail", and serves its client bundle
+#    at /plugins/dsh-ponytail/client.js.
+#
+#    Note for a running instance: a plugin row added LIVE is not picked up
+#    by the patch watcher — the watcher applies changes to already-mounted
+#    rows (`disabled`, `config`), but the plugin SET is fixed at boot. A
+#    running instance therefore ignores this row silently. Nothing breaks;
+#    the chip appears on the next `dsh web` start.
+# ---------------------------------------------------------------------------
+- insert:
+    - id: dsh-ponytail
+      name: 'dsh-ponytail'
+
+# ---------------------------------------------------------------------------
+# 4. The skill provider. The `web-app` bundle ships `skill-filesystem` with
+#    `disabled: true`, so an id-targeted `config` patch alone discovers
+#    NOTHING — the plugin never mounts and no error is raised. Setting
+#    `disabled: false` here is what actually turns the skill catalog on.
+#
+#    The default roots ($DSH_HOME/skills, $DSH_AGENTS_HOME/skills, project
+#    roots) need no configuration. `customSkillDirs` is additive and is used
+#    by the cc-compat layer for roots outside those.
+# ---------------------------------------------------------------------------
+- id: skill-filesystem
+  disabled: false
+
+# ---------------------------------------------------------------------------
+# 5. Re-enable the bundled dsh-badge skill provider (disabled by default in
+#    the dsh-base bundle). Config-less and safe: registers one "dsh-badge"
+#    skill so the model can add "powered by dsh" attribution to documents and
+#    pull requests.
+# ---------------------------------------------------------------------------
+- id: skill-badge
+  disabled: false
+
+# ---------------------------------------------------------------------------
+# 6. Trust extra hostnames for the browser-trust fence on /api, so a reverse
+#    proxy or tunnel hostname is accepted. Empty by default: nothing is
+#    trusted beyond the runtime's own list until DSH_TRUSTED_HOSTS is set.
+#    Comma-separated, e.g. DSH_TRUSTED_HOSTS=dsh.example.com,other.example
+# ---------------------------------------------------------------------------
+- id: connection
+  config:
+    trustedHosts: !!js ((process.env["DSH_TRUSTED_HOSTS"] ?? "").split(",").map(h => h.trim()).filter(h => h !== "").concat(ctx.webRuntime.trustedHosts))

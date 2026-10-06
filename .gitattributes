@@ -1,0 +1,63 @@
+# Line-ending policy. `core.autocrlf` is a per-machine setting, so a repository
+# that expects to be cloned on both Windows and Linux has to state the rule
+# itself — a CRLF `install.sh` is not "a bit off", it is a script that will not
+# run on the machine it was written for.
+
+# Shell scripts run on POSIX systems: LF, always, in the working tree too.
+*.sh text eol=lf
+
+# Everything else that is text: stored as LF, checked out with the platform's
+# native ending.
+*.md   text
+*.mjs  text
+*.js   text
+*.cjs  text
+*.json text
+*.yml  text
+*.yaml text
+*.ps1  text
+*.txt  text
+LICENSE text
+.gitignore text
+.gitattributes text
+
+# Skills carry checklists, templates and fixtures in many extensions.
+*.css  text
+*.html text
+*.csv  text
+*.tex  text
+*.bib  text
+*.typ  text
+*.py   text
+*.sql  text
+*.toml text
+*.ini  text
+*.cfg  text
+*.xml  text
+*.xsd  text
+*.bst  text
+*.mplstyle text
+*.example text
+
+# Binaries: never touched, never diffed.
+*.png  binary
+*.jpg  binary
+*.jpeg binary
+*.gif  binary
+*.webp binary
+*.pdf  binary
+*.zst  binary
+*.gz   binary
+*.zip  binary
+*.exe  binary
+*.dll  binary
+*.so   binary
+*.dylib binary
+*.woff binary
+*.woff2 binary
+*.ttf  binary
+*.ico  binary
+
+# Git's own bookkeeping.
+.gitattributes export-ignore
+.gitignore export-ignore

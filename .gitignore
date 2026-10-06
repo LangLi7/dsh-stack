@@ -1,0 +1,50 @@
+# Nothing here should ever be committed. The list exists because an export
+# from a live harness home is one careless `git add -A` away from publishing a
+# credential.
+
+# Credentials and secrets
+.credentials.yaml
+.credentials.yml
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Harness runtime state (a target machine generates all of this)
+sessions/
+projects/
+storages/
+attachments/
+crew/
+data/
+logs/
+*.log
+settings.yaml
+skills-lock.local.json
+
+# Generator output (cc-compat regenerates it in the target home)
+home/profiles/*/cordis.patch.yml.bak-*
+cc-compat/generated-hooks/
+cc-compat/generated-*.patch.yml
+cc-compat/audit-report.json
+cc-compat/catalog-snapshot-*.txt
+cc-compat/*-report.json
+
+# Installer side effects
+*.bak-dsh-stack
+*.bak-dsh-stack-*
+
+# Dependencies and caches
+node_modules/
+.pnpm-store/
+.npm-cache/
+.cache/
+*.tsbuildinfo
+
+# Editors and OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+desktop.ini

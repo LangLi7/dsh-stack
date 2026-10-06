@@ -1,0 +1,87 @@
+{
+  "_kommentar": "Beispiel-Profil (Kittirat Patsaban). Für neue Bewerbungen diese Datei kopieren und die Felder anpassen. Die Skill schreibt im Ich-Stil des Nutzers, erfindet aber keine Fakten.",
+  "profil": {
+    "vorname": "Kittirat",
+    "nachname": "Patsaban",
+    "anrede_kuerzel": "Herr",
+    "adresse": "Hinterdorfstrasse 5",
+    "plz_ort": "5417 Untersiggenthal",
+    "land": "Schweiz",
+    "email": "kittiratpatsaban@gmail.com",
+    "telefon": "077 266 18 57",
+    "geburtsdatum": "17.11.2003",
+    "nationalitaet": "Thailand",
+    "aufenthaltsstatus": "Aufenthaltsbewilligung C, in der Schweiz seit 2009",
+    "links": {
+      "github": "https://github.com/LangLi7"
+    }
+  },
+  "bewerbung": {
+    "bewerben": "Praktikum",
+    "beruf": "Intern IT – 12 Monate",
+    "firma": "Swissgrid AG",
+    "firma_adresse": "Bleichemattstrasse 31",
+    "firma_plz": "5001 Aarau",
+    "anrede_empfaenger": "Sehr geehrte Frau Frey"
+  },
+  "ausbildung": [
+    { "zeitraum": "2023 – 2026", "institution": "Berufs- und Weiterbildungszentrum BWZ Brugg", "titel": "Lehre als Montage-Elektriker EFZ" },
+    { "zeitraum": "2022 – 2023", "institution": "Schule KSB, Kantonale Schule Baden", "titel": "" },
+    { "zeitraum": "2017 – 2021", "institution": "Realschule St. Benedikt, Hermetschwil-Staffeln", "titel": "" },
+    { "zeitraum": "2013 – 2017", "institution": "Primarschule St. Benedikt, Hermetschwil-Staffeln", "titel": "" }
+  ],
+  "berufserfahrung": [
+    {
+      "zeitraum": "01.08.2023 – 31.07.2026",
+      "titel": "Lehre als Montage-Elektriker EFZ",
+      "firma": "Thut Elektro AG, Klingnau",
+      "punkte": [
+        "Mitarbeit bei Elektroinstallationen in Industrie- und Gewerbeobjekten inkl. sicherheitskritischer Anlagen (u.a. PSI, Zwilag, ABB, Quant Baden)",
+        "Installation von Apparaten und Betriebsmitteln gemäss NIN",
+        "Verdrahten und Verkabeln von Schaltschränken nach Schaltplan",
+        "Arbeiten in Technik- und Serverräumen sowie sicherheitsrelevanten Industrieanlagen",
+        "Durchführung von Erst- und Sichtprüfungen sowie SINA- und UKV-Messungen gemäss NIV"
+      ]
+    },
+    {
+      "zeitraum": "09.2021 – 2022",
+      "titel": "Befristete Tätigkeit in Dienstleistung & Administration",
+      "firma": "SEMO, Verein Lernwerk, Vogelsang AG",
+      "punkte": [
+        "Bedienung der Telefonzentrale und des Kundenschalters am Empfang",
+        "Statistische Datenerfassung in Microsoft Excel 2020",
+        "Lagerbewirtschaftung, Stammdatenerfassung via ERP europa3000",
+        "Formulare, Serienbriefe und Etiketten in Microsoft Word 2020"
+      ]
+    }
+  ],
+  "sprachen": {
+    "Deutsch": 7,
+    "Thailändisch": 10,
+    "Englisch": 7
+  },
+  "skills_technik": {
+    "Python": 8,
+    "Linux / Bash Scripting": 6,
+    "SQL / Datenbanken": 7,
+    "Automatisierung": 7,
+    "Docker": 7,
+    "Kubernetes (K3s)": 6,
+    "Rust": 3,
+    "Go": 3
+  },
+  "skills_edv": {
+    "Microsoft Office": 8,
+    "Abacus ERP": 6
+  },
+  "projekte": [
+    "Discord-Bot-Anwendungen mit Pycord, Datenbanken mit SQLite/SQL",
+    "Eigene Linux-Root-Server, Docker, K3s-Kubernetes-Cluster unter Ubuntu"
+  ],
+  "hobbys": "Programmieren, Aufbau eigener IT-Projekte, Datenbank-Architekturen, Prozess-Automatisierung, Betreiben eigener Server-Infrastrukturen; Teamarbeit; Taktische-Games (Valorant, League of Legends)",
+  "anhang": {
+    "zeugnisse": [
+      { "datei": "unterlagen/Lehrabschluss.pdf", "seiten": 3 }
+    ]
+  }
+}
